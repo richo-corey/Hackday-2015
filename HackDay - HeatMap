@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Heatmaps</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            height: 100%;
+        }
+
+        #floating-panel {
+            position: absolute;
+            top: 10px;
+            left: 25%;
+            z-index: 5;
+            background-color: #fff;
+            padding: 5px;
+            border: 1px solid #999;
+            text-align: center;
+            font-family: 'Roboto','sans-serif';
+            line-height: 30px;
+            padding-left: 10px;
+        }
+
+        #floating-panel {
+            background-color: #fff;
+            border: 1px solid #999;
+            left: 25%;
+            padding: 5px;
+            position: absolute;
+            top: 10px;
+            z-index: 5;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment.js"></script>
+
+    <script>
+        var map, heatmap, mapsEngineLayer;
+    function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 13,
+            center: { lat: -31.953, lng: 115.852 },
+            mapTypeId: google.maps.MapTypeId.SATELLITE
+        });
+        heatmap = new google.maps.visualization.HeatmapLayer({
+            data: getPoints(),
+            map: map
+        });
+
+        mapsEngineLayer = new google.maps.visualization.MapsEngineLayer({
+            layerId: '09372590152434720789-14127290532664981344',
+            map: map
+        });
+    }
+
+    function toggleHeatmap() {
+        heatmap.setData(getPoints());
+        heatmap.setMap(heatmap.getMap() ? null : map);
+    }
+
+    // Heatmap data: 500 Points
+    function getPoints() {
+        var points = [];
+        $.each(dummy_data.features, function(k,v) {
+            points.push(new google.maps.LatLng(v.geometry.coordinates[1], v.geometry.coordinates[0]));
+        });
+        return points;
+    }
+    function resetFilter() {
+        var points = [];
+        heatmap.setData(getPoints());
+    }
+    function filterToday() {
+        var points = [];
+        var date = moment().format('YYYY/MM/DD');
+
+        $.each(dummy_data.features, function (k, v) {
+            if (moment(v.properties.timestamp).isSame(date)) {
+                points.push(new google.maps.LatLng(v.geometry.coordinates[1], v.geometry.coordinates[0]));
+            }
+        });
+        heatmap.setData(points);
+    }
+
+    function filterPastSevenDays() {
+        var points = [];
+        var date = moment().subtract(7, 'days');
+        //date.setDate(new Date().setDate(new Date().getDate() - 7));
+
+        $.each(dummy_data.features, function (k, v) {
+            if (moment(v.properties.timestamp).isAfter(date)) {
+                points.push(new google.maps.LatLng(v.geometry.coordinates[1], v.geometry.coordinates[0]));
+            }
+        });
+
+        heatmap.setData(points);
+    }
+
+    function filterPastMonth() {
+        var points = [];
+        var date = moment().subtract(1, 'Months');
+
+        $.each(dummy_data.features, function (k, v) {
+            if (moment(v.properties.timestamp).isAfter(date)) {
+                points.push(new google.maps.LatLng(v.geometry.coordinates[1], v.geometry.coordinates[0]));
+            }
+        });
+
+        heatmap.setData(points);
+    }
+    </script>
+    <script async defer
+            src="https://maps.googleapis.com/maps/api/js?signed_in=true&libraries=visualization&callback=initMap">
+    </script>
+    <script src="MapData.json"></script>
+</head>
+
+<body>
+    <div id="floating-panel">
+        <button onclick="toggleHeatmap()">Toggle Heatmap</button>
+        <button onclick="changeGradient()">Toggle Known Obstructions</button>
+    </div>
+    <nav style="float:left; display:block">
+        <button onclick="filterToday()" style="display:list-item; display:block">Today</button>
+        <button onclick="filterPastSevenDays()" style="display:list-item; display:block">Last Week</button>
+        <button onclick="filterPastMonth()" style="display:list-item; display:block">Last Month</button>
+    </nav>
+    <nav>
+        <button onclick="resetFilter()" style="display:block">Reset</button>
+    </nav>    
+    <div id="map"></div>
+</body>
+</html>
+<!--Sign up for free to join this conversation on GitHub. Already have an account? Sign in to comment
+Status API Training Shop Blog About Pricing
+© 2015 GitHub, Inc. Terms Privacy Security Contact Help-->
